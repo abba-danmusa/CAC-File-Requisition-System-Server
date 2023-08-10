@@ -1,0 +1,10 @@
+{
+  "configurations": [
+    {
+      "type": "msedge",
+      "name": "https://5e49-197-210-70-222.ngrok-free.app/school/academics/section",
+      "request": "launch",
+      "url": "https://5e49-197-210-70-222.ngrok-free.app/school/academics/section"
+    }
+  ]
+}

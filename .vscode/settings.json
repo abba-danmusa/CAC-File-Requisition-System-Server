@@ -1,0 +1,11 @@
+{
+  "powermode.enabled": true,
+  "powermode.presets": "fireworks",
+  "beautify.config": "",
+  "editor.indentSize": 2,
+  "notebook.editorOptionsCustomizations": {
+  
+  },
+  "auto-close-tag.fullMode": false,
+  "zenMode.fullScreen": true
+}

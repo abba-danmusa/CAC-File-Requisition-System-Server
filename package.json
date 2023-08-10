@@ -1,0 +1,21 @@
+{
+  "name": "cac-file-requisition-system-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "start.js",
+  "scripts": {
+    "dev": "nodemon ./start.js",
+    "prod": "node ./start.js",
+    "start": "npm run dev"
+  },
+  "author": "abba-danmusa",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.4.2",
+    "nodemon": "^3.0.1"
+  }
+}
