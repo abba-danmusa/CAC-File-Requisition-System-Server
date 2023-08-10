@@ -18,7 +18,7 @@ mongoose.connection.once('open', () => {
 })
 
 // import all models
-
+require('./models/User')
 
 // start the app
 const app = require('./app')

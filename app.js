@@ -3,6 +3,7 @@ const path = require('path')
 const bodyParser = require("body-parser")
 const errorHandlers = require('./handlers/errorHandlers')
 const cors = require('cors')
+const authRoutes = require('./routes/authRoutes')
 
 const app = express()
 
@@ -13,8 +14,8 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cors())
 
-// tell expresss to use your routes
-
+// tell express to use your routes
+app.use(authRoutes)
 
 // if the above routes didn't work, 404 them and forward to error handlers
 app.use(errorHandlers.notFound)
