@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema({
     trim: true,
     unique: true
   },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  rank: {
+    type: String,
+    required: true
+  },
   password: {
     type: String,
     required: true
@@ -54,11 +63,12 @@ userSchema.methods.comparePassword = function(candidatePassword) {
   return new Promise((resolve, reject) => {
     bcrypt.compare(candidatePassword, user.password, (err, isMatch) => {
       if (err) {
+        console.log(error)
         return reject(err)
       }
 
       if (!isMatch) {
-        return reject(false)
+        return reject({status: 401, message: 'Incorrect Password'})
       }
 
       resolve(true)

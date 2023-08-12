@@ -10,15 +10,21 @@ exports.signup = async (req, res) => {
 
 exports.signin = async (req, res) => {
   let { username, password } = req.body
-
   const user = await User.findOne({ username })
   if (!user) {
-    res.status(400).json({status: 'error', message: 'User with the given username does not exist!'})
+    res.status(401).json({
+    status: 'error', 
+    message: 'User with the given username does not exist!'
+    })
   }
   await user.comparePassword(password)
   const token = jwt.sign({ userId: user._id }, process.env.SECRET)
-  const userData = { user, token }
-  res.status(200).send(userData)
+  res.status(200).json({
+    status: 'success',
+    message: 'Sign in successfully',
+    user,
+    token
+  })
 }
 
 exports.requireAuth = async (req, res, next) => {
