@@ -16,6 +16,7 @@ exports.signin = async (req, res) => {
     status: 'error', 
     message: 'User with the given username does not exist!'
     })
+    return
   }
   await user.comparePassword(password)
   const token = jwt.sign({ userId: user._id }, process.env.SECRET)

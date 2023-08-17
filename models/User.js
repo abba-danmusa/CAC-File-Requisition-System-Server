@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    unique: true
+    unique: 'User with the give username already exist. choose a different username'
   },
   name: {
     type: String,
@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true
+  },
+  accountType: {
+    type: String,
+    required: true
   }
 })
 
