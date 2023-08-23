@@ -5,7 +5,10 @@ const User = mongoose.model('User')
 exports.signup = async (req, res) => {
   const user = new User(req.body)
   await user.save()
-  res.status(200).json({status: 'success', message: 'User registered successfully!'})
+  res.status(200).json({
+    status: 'success',
+    message: 'User registered successfully!'
+  })
 }
 
 exports.signin = async (req, res) => {
