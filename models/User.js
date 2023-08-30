@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
   accountType: {
     type: String,
     required: true
+  },
+  section: {
+    type: String,
+    enum: ['Wing A', 'Wing B Team 1', 'Wing B Team 2', 'Wing B Team 3', 'Wing B Team 4', 'Wing B Team 5', 'Wing B Team 6', 'Wing B Team 7', 'Wing B Team 8', 'Incorporated Trustees', 'Business Names'] 
   }
 })
 

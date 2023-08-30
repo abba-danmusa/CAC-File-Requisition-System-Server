@@ -35,6 +35,14 @@ const requestSchema = new mongoose.Schema({
     required: 'Please provide the purpose of the request',
     trim: true
   },
+  companyType: {
+    type: String,
+    enum: ['IT', 'LLC/GTE', 'BN']
+  },
+  section: {
+    type: String,
+    enum: ['Wing A', 'Wing B Team 1', 'Wing B Team 2', 'Wing B Team 3', 'Wing B Team 4', 'Wing B Team 5', 'Wing B Team 6', 'Wing B Team 7', 'Wing B Team 8', 'Incorporated Trustees', 'Business Names']
+  },
   fileStatus: {
     isReturned: Boolean,
     isReceived: Boolean
@@ -42,7 +50,7 @@ const requestSchema = new mongoose.Schema({
   requestStatus: {
     currentStep: {
       type: Number,
-      enum: [0, 1, 2, 3],
+      enum: [0, 1, 2, 3, 4],
       default: 0
     },
     authorization: {
@@ -56,6 +64,7 @@ const requestSchema = new mongoose.Schema({
         enum: ['pending', 'rejected', 'accepted'],
         default: 'pending'
       },
+      remarks: String,
       authorizedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -78,6 +87,7 @@ const requestSchema = new mongoose.Schema({
         enum: ['pending', 'rejected', 'accepted'],
         default: 'pending'
       },
+      remarks: String,
       approvedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -97,6 +107,7 @@ const requestSchema = new mongoose.Schema({
         enum: ['pending', 'rejected', 'accepted'],
         default: 'pending'
       },
+      remarks: String,
       releasedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -116,6 +127,7 @@ const requestSchema = new mongoose.Schema({
         enum: ['pending', 'rejected', 'accepted'],
         default: 'pending'
       },
+      remarks: String,
       receivedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
