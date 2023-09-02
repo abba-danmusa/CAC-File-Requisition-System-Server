@@ -40,6 +40,7 @@ exports.getRequests = async (req, res) => {
               }
             }
           },
+          remarks: '$requestStatus.authorization.remarks',
           date: {
             $cond: {
               if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
@@ -62,6 +63,7 @@ exports.getRequests = async (req, res) => {
               }
             }
           },
+          remarks: '$requestStatus.approval.remarks',
           date: {
             $cond: {
               if: { $eq: ['$requestStatus.approval.status', 'pending'] },
@@ -84,6 +86,7 @@ exports.getRequests = async (req, res) => {
               }
             }
           },
+          remarks: '$requestStatus.fileRelease.remarks',
           date: {
             $cond: {
               if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
@@ -106,6 +109,7 @@ exports.getRequests = async (req, res) => {
               }
             }
           },
+          remarks: '$requestStatus.fileReceive.remarks',
           date: {
             $cond: {
               if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
@@ -392,8 +396,8 @@ exports.pendingApproval = async (req, res) => {
 
 exports.pendingApprovals = async (req, res) => {
   const requests = await Request.find({
+    'requestStatus.authorization.status': 'accepted',
     'requestStatus.approval.status': 'pending',
-    'requestStatus.authorization.status': 'accepted'
   })
 
   if (!requests.length) {
@@ -524,5 +528,1007 @@ exports.confirmReceipt = async (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Acknowledged'
+  })
+}
+
+exports.awaitAuthorization = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $match: {
+        from: req.user._id,
+        'requestStatus.authorization.status': 'pending'
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any request is awaiting authorization'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Requests found',
+    requests
+  })
+}
+
+exports.awaitApproval = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $match: {
+        from: req.user._id,
+        'requestStatus.authorization.status': 'accepted',
+        'requestStatus.approval.status': 'pending'
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any request is awaiting approval'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Requests found',
+    requests
+  })
+}
+
+exports.authorizedRequests = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $match: {
+        from: req.user._id,
+        $or: [{ 'requestStatus.authorization.status': 'accepted' }, { 'requestStatus.authorization.status': 'rejected' }]
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any authorized request'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Requests found',
+    requests
+  })
+}
+
+exports.approvedRequests = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $match: {
+        from: req.user._id,
+        $or: [{ 'requestStatus.approval.status': 'accepted' }, { 'requestStatus.approval.status': 'rejected' }]
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any approved request'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Requests found',
+    requests
+  })
+}
+
+exports.filesReceived = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $match: {
+        from: req.user._id,
+        'requestStatus.fileReceive.status': 'accepted'
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any received file'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Requests found',
+    requests
+  })
+}
+
+exports.allAuthorizedRequests = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'from',
+        foreignField: '_id',
+        as: 'from'
+      }
+    },
+    {
+      $unwind: '$from'
+    },
+    {
+      $match: {
+        'from.department': req.user.department,
+        'requestStatus.authorization.status': 'accepted'
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    },
+    {
+      $sort: {_id: -1}
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any accepted request found'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Accepted requests found',
+    requests
+  })
+}
+
+exports.allDeclinedRequests = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'from',
+        foreignField: '_id',
+        as: 'from'
+      }
+    },
+    {
+      $unwind: '$from'
+    },
+    {
+      $match: {
+        'from.department': req.user.department,
+        'requestStatus.authorization.status': 'rejected'
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    },
+    {
+      $sort: { _id: -1 }
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any declined request found'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Declined requests found',
+    requests
+  })
+}
+
+exports.allAuthorizationRequests = async (req, res) => {
+  const requests = await Request.aggregate([
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'from',
+        foreignField: '_id',
+        as: 'from'
+      }
+    },
+    {
+      $unwind: '$from'
+    },
+    {
+      $match: {
+        'from.department': req.user.department
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        }
+      }
+    },
+    {
+      $sort: { _id: -1 }
+    }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any request found'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Requests found',
+    requests
   })
 }

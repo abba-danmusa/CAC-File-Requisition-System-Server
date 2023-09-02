@@ -18,7 +18,7 @@ router.post(
 )
 
 // Approval
-router.post('/approval/request', requestController.approveRequest)
+router.post('/approval/request', catchErrors(requestController.approveRequest))
 
 // Release
 router.post('/release/request', catchErrors(requestController.sendFile))
@@ -45,6 +45,26 @@ router.get(
   '/authorization/request',
   (requestController.getAuthorizationRequests)
 )
+router.get(
+  '/authorization/requests/pending',
+  catchErrors(requestController.awaitAuthorization)
+)
+router.get(
+  '/authorization/request/accepted',
+  catchErrors(requestController.authorizedRequests)
+)
+router.get(
+  '/authorization/department/accepted/request',
+  catchErrors(requestController.allAuthorizedRequests)
+)
+router.get(
+  '/authorization/department/declined/request',
+  catchErrors(requestController.allDeclinedRequests)
+)
+router.get(
+'/authorization/department/request',
+  catchErrors(requestController.allAuthorizationRequests)
+)
 
 // Approval
 router.get(
@@ -59,6 +79,14 @@ router.get(
   '/approval/pending',
   catchErrors(requestController.pendingApprovalCount)
 )
+router.get(
+  '/approval/requests/pending',
+  catchErrors(requestController.awaitApproval)
+)
+router.get(
+  '/approval/request/accepted',
+  catchErrors(requestController.approvedRequests)
+)
 
 // Release
 router.get(
@@ -72,6 +100,12 @@ router.get(
 router.get(
   '/release/requests',
   catchErrors(requestController.pendingReleases)
+)
+
+// Received
+router.get(
+  '/receive/request/accepted',
+  catchErrors(requestController.filesReceived)
 )
 
 module.exports = router
