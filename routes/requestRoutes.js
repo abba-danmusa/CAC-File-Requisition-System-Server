@@ -30,7 +30,7 @@ router.post('/receive/request', catchErrors(requestController.confirmReceipt))
 // GET Routes //
 // ********* //
 
-router.get('/requests', catchErrors(requestController.getRequests))
+router.get('/requests/:page', catchErrors(requestController.getRequests))
 router.get(
   '/request/status',
   catchErrors(requestController.getLatestRequestStatus)
@@ -42,6 +42,10 @@ router.get(
   catchErrors(requestController.getUnauthorizedRequests)
 )
 router.get(
+  '/authorization/request/pending/count',
+  catchErrors(requestController.unAuthorizedRequestCount)
+)
+router.get(
   '/authorization/request',
   (requestController.getAuthorizationRequests)
 )
@@ -50,7 +54,7 @@ router.get(
   catchErrors(requestController.awaitAuthorization)
 )
 router.get(
-  '/authorization/request/accepted',
+  '/authorization/request/accepted/:page',
   catchErrors(requestController.authorizedRequests)
 )
 router.get(
@@ -84,10 +88,21 @@ router.get(
   catchErrors(requestController.awaitApproval)
 )
 router.get(
-  '/approval/request/accepted',
+  '/approval/request/accepted/:page',
   catchErrors(requestController.approvedRequests)
 )
-
+router.get(
+  '/approval/account/approved/request',
+  catchErrors(requestController.approvalRequests)
+)
+router.get(
+  '/approval/account/disapproved/request',
+  catchErrors(requestController.disapprovedRequests)
+)
+router.get(
+  '/approval/account/request',
+  catchErrors(requestController.allApprovalRequests)
+)
 // Release
 router.get(
   '/release/request',
@@ -101,11 +116,41 @@ router.get(
   '/release/requests',
   catchErrors(requestController.pendingReleases)
 )
-
-// Received
 router.get(
-  '/receive/request/accepted',
+  '/release/section/release/request',
+  catchErrors(requestController.releasedRequests)
+)
+router.get(
+  '/release/section/return/request',
+  catchErrors(requestController.returnedRequests)
+)
+router.get(
+  '/release/section/request',
+  catchErrors(requestController.allReleaseRequests)
+)
+
+// Receive
+router.get(
+  '/receive/request/accepted/:page',
   catchErrors(requestController.filesReceived)
+)
+
+// Searches
+router.get(
+  '/request/account/search',
+  catchErrors(requestController.requestAccountSearch)
+)
+router.get(
+  '/authorization/account/search',
+  catchErrors(requestController.authorizationAccountSearch)
+)
+router.get(
+  '/approval/account/search',
+  catchErrors(requestController.approvalAccountSearch)
+)
+router.get(
+  '/manage/account/search',
+  catchErrors(requestController.manageAccountSearch)
 )
 
 module.exports = router

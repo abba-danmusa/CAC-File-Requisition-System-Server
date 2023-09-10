@@ -4,6 +4,7 @@ const authorizationStep = 0
 const approvalStep = 1
 const fileReleaseStep = 2
 const fileReceiveStep = 3
+const fileReturnStep = 4
 
 const requestSchema = new mongoose.Schema({
   date: {
@@ -42,10 +43,6 @@ const requestSchema = new mongoose.Schema({
   section: {
     type: String,
     enum: ['Wing A', 'Wing B Team 1', 'Wing B Team 2', 'Wing B Team 3', 'Wing B Team 4', 'Wing B Team 5', 'Wing B Team 6', 'Wing B Team 7', 'Wing B Team 8', 'Incorporated Trustees', 'Business Names']
-  },
-  fileStatus: {
-    isReturned: Boolean,
-    isReceived: Boolean
   },
   requestStatus: {
     currentStep: {
@@ -112,6 +109,10 @@ const requestSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
       },
+      timeElapse: {
+        time: Date,
+        elapsed: Boolean
+      },
       dateReceived: Date,
       dateViewed: Date,
       dateTreated: Date
@@ -135,8 +136,36 @@ const requestSchema = new mongoose.Schema({
       dateReceived: Date,
       dateViewed: Date,
       dateTreated: Date
+    },
+    fileReturn: {
+      step: {
+        type: Number,
+        enum: [4],
+        default: fileReturnStep
+      },
+      status: {
+        type: String,
+        enum: ['pending', 'rejected', 'accepted'],
+        default: 'pending'
+      },
+      remarks: String,
+      returnedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      dateConfirmedReturn: Date,
+      dateReturned: Date,
+      returnDate: Date,
+      dateViewed: Date
     }
   },
+})
+
+requestSchema.index({
+  companyName: 'text',
+  companyType: 'text',
+  rcNumber: 'text',
+  rrrNumber: 'text'
 })
 
 function autopopulate(next) {
