@@ -1,29 +1,34 @@
 const mongoose = require('mongoose');
 
+const expirationTime = new Date()
 const notificationSchema = new mongoose.Schema({
   recipient: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // Reference to the User model
-    required: 'please provide the recipient',
+  },
+  createdAt: {
+    type: Date,
+    expires: expirationTime.setMinutes(expirationTime.getMinutes() + 5),
+    default: Date.now,
   },
   department: {
     type: String,
-    required: 'Please provide the recipient department'
-  },
-  message: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Complaint',
-    required: true
+    required: 'Please provide the recipients department'
   },
   type: {
     type: String,
     enum: ['Complaint', 'Message']
   },
+  subject: String,
+  message: String,
   date: {
     type: Date,
     default: Date.now,
   },
-  // Add other fields as needed
-});
+  sent: {
+    type: Boolean,
+    default: false
+  }
+})
 
 mongoose.model('Notification', notificationSchema)

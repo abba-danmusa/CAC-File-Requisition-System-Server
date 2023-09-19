@@ -16,7 +16,7 @@ const complaintSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['Time extension', 'Complaint']
+    enum: ['Time extension', 'Complaint', 'Authorization']
   },
   complaint: String,
 })

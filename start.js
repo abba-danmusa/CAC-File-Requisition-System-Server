@@ -20,10 +20,14 @@ mongoose.connection.once('open', () => {
 // import all models
 require('./models/User')
 require('./models/Request')
+require('./models/Notification')
 
 // start the app
 const app = require('./app')
-app.set('port', process.env.PORT || 7777)
-const server = app.listen(app.get('port'), () => {
-  console.log(`Server running on PORT ${server.address().port}`)
+// app.set('port', process.env.PORT || 7777)
+// const server = app.listen(app.get('port'), () => {
+//   console.log(`Server running on PORT ${server.address().port}`)
+// })
+app.listen(process.env.PORT || 7777, () => {
+  console.log(`Server running on PORT ${process.env.PORT}`)
 })

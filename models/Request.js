@@ -109,6 +109,10 @@ const requestSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
       },
+      treatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
       timeElapse: {
         time: Date,
         elapsed: Boolean
@@ -145,17 +149,20 @@ const requestSchema = new mongoose.Schema({
       },
       status: {
         type: String,
-        enum: ['pending', 'rejected', 'accepted'],
+        enum: ['pending', 'rejected', 'return', 'accepted'],
         default: 'pending'
       },
+      timeElapse: {
+        time: Date,
+        elapsed: Boolean
+      },
       remarks: String,
-      returnedBy: {
+      receivedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
       },
-      dateConfirmedReturn: Date,
+      dateAcknowledged: Date,
       dateReturned: Date,
-      returnDate: Date,
       dateViewed: Date
     }
   },

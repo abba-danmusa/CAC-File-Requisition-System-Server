@@ -26,6 +26,10 @@ router.post('/release/request', catchErrors(requestController.sendFile))
 // Receive
 router.post('/receive/request', catchErrors(requestController.confirmReceipt))
 
+// Return
+router.post('/return/request', catchErrors(requestController.returnFile))
+router.post('/return/acknowledged', catchErrors(requestController.acknowledgeFileReturn))
+
 // *********** //
 // GET Routes //
 // ********* //
@@ -135,7 +139,15 @@ router.get(
   catchErrors(requestController.filesReceived)
 )
 
-// Searches
+// Return
+router.get(
+  '/return/section/returned/request/:page',
+  catchErrors(requestController.returnedFiles)
+)
+
+// *********** //
+// Search Routes //
+// ********* //
 router.get(
   '/request/account/search',
   catchErrors(requestController.requestAccountSearch)
@@ -151,6 +163,10 @@ router.get(
 router.get(
   '/manage/account/search',
   catchErrors(requestController.manageAccountSearch)
+)
+router.get(
+  '/manage/account/return/search',
+  catchErrors(requestController.returnedFilesSearch)
 )
 
 module.exports = router
