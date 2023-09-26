@@ -1,6 +1,7 @@
 const express = require('express')
 const { catchErrors } = require('../handlers/errorHandlers')
 const requestController = require('../controllers/requestController')
+const notificationController = require('../controllers/notificationController')
 const { requireAuth } = require('../controllers/authController')
 const router = express.Router()
 
@@ -144,13 +145,17 @@ router.get(
   '/return/section/returned/request/:page',
   catchErrors(requestController.returnedFiles)
 )
-
+  
 // *********** //
 // Search Routes //
 // ********* //
 router.get(
   '/request/account/search',
   catchErrors(requestController.requestAccountSearch)
+)
+router.get(
+  '/request/account/receive/search',
+  catchErrors(requestController.receivedFilesSearch)
 )
 router.get(
   '/authorization/account/search',

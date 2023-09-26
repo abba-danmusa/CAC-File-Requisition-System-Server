@@ -7,7 +7,7 @@ const ObjectId = require('mongodb').ObjectId
 exports.request = async (req, res) => {
   req.body.from = req.user._id
   if (req.body.companyType !== 'BN' || req.body.companyType !== 'IT') {
-    req.body.section = assignFileToSection(req.body.rcNumber)
+    req.body.section = await assignFileToSection(req.body.rcNumber)
   }
   if (req.body.companyType === 'BN') req.body.section = 'Business Names'
   if (req.body.companyType === 'IT') req.body.section = 'Incorporated Trustees'
@@ -145,7 +145,7 @@ exports.getRequests = async (req, res) => {
           date: {
             $cond: {
               if: { $eq: ['$requestStatus.fileReturn.status', 'pending'] },
-              then: '$requestStatus.fileReceive.timeElapse.time',
+              then: '$requestStatus.fileReturn.timeElapse.time',
               else: {
                 $cond: {
                   if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
@@ -636,7 +636,8 @@ exports.sendFile = async (req, res) => {
 const returnElapseTime = async () => {
   // Calculate 7 days from now in UTC
   const currentDate = new Date();
-  currentDate.setUTCDate(currentDate.getUTCDay() + 7);
+  currentDate.setUTCMinutes(currentDate.getUTCMinutes() + 10)
+  // currentDate.setUTCDate(currentDate.getUTCDay() + 7)
   return currentDate;
 }
 exports.confirmReceipt = async (req, res) => {
@@ -1332,6 +1333,35 @@ exports.filesReceived = async (req, res) => {
               if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
               then: '$requestStatus.fileReceive.dateReceived',
               else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        },
+        fileReturn: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReturn.status', 'pending'] },
+              then: 'Awaiting Return',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
+                  then: 'Awaiting Acknowledgement',
+                  else: 'File Returned'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReturn.status', 'pending'] },
+              then: '$requestStatus.fileReceive.timeElapse.time',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
+                  then: '$requestStatus.fileReturn.dateReturned',
+                  else: '$requestStatus.fileReturn.dateAcknowledged'
+                }
+              }
             }
           }
         }
@@ -2460,6 +2490,161 @@ exports.requestAccountSearch = async (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Searched results found',
+    requests
+  })
+}
+
+exports.receivedFilesSearch = async (req, res) => {
+  const searchQuery = new RegExp(req.query.query)
+  const requests = await Request.aggregate([
+    {
+      $match: {
+        from: req.user._id,
+        'requestStatus.fileReceive.status': 'accepted',
+        $or: [
+          { companyName: { $regex: searchQuery, $options: 'gi' } },
+          { rcNumber: { $regex: searchQuery, $options: 'gi' } }
+        ]
+      }
+    },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        },
+        fileReturn: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReturn.status', 'pending'] },
+              then: 'Awaiting Return',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
+                  then: 'Awaiting Acknowledgement',
+                  else: 'File Returned'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReturn.status', 'pending'] },
+              then: '$requestStatus.fileReceive.timeElapse.time',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
+                  then: '$requestStatus.fileReturn.dateReturned',
+                  else: '$requestStatus.fileReturn.dateAcknowledged'
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    { $limit: 20 }
+  ])
+
+  if (!requests.length) {
+    return res.status(404).json({
+      status: 'success',
+      message: 'No any result found'
+    })
+  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Results found',
     requests
   })
 }

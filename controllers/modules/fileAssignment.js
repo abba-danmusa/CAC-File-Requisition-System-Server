@@ -10,7 +10,7 @@ const sectionConfig = [
   { min: 1561239, max: 1748499, section: 'Wing B Team 8' },
 ]
 
-function assignFileToSection(rcNumber) {
+async function assignFileToSection(rcNumber) {
   // Remove the prefix 'bn' and extract the number part
   const numberString = rcNumber.replace(/^\D+/g, '')
   // Convert the extracted number string to an integer
