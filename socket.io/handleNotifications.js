@@ -75,7 +75,17 @@ module.exports = (io, socket) => {
     io.to(to).emit('notification', notification)
   }
   
+  const moreTimeRequestNotification = (to, from, request) => {
+    const notification = {
+      subject: 'Additional Time Request',
+      body: `${from} is requesting for additional time for a file (${request.companyName})`,
+      tag: from
+    }
+    io.to(to).emit('notification', notification)
+  }
+
   socket.on('authorization notification', authorizationNotification)
+  socket.on('more notification', moreTimeRequestNotification)
   socket.on('approval notification', approvalNotification)
   socket.on('release notification', releaseNotification)
   socket.on('return notification', returnNotification)

@@ -20,6 +20,7 @@ router.post(
 
 // Approval
 router.post('/approval/request', catchErrors(requestController.approveRequest))
+router.post('/approval/time/request', catchErrors(requestController.approveAdditionalTimeRequest))
 
 // Release
 router.post('/release/request', catchErrors(requestController.sendFile))
@@ -30,6 +31,8 @@ router.post('/receive/request', catchErrors(requestController.confirmReceipt))
 // Return
 router.post('/return/request', catchErrors(requestController.returnFile))
 router.post('/return/acknowledged', catchErrors(requestController.acknowledgeFileReturn))
+
+router.post('/request/time', catchErrors(requestController.requestMoreTime))
 
 // *********** //
 // GET Routes //

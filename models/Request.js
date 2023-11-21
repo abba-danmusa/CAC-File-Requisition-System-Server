@@ -44,6 +44,20 @@ const requestSchema = new mongoose.Schema({
     type: String,
     enum: ['Wing A', 'Wing B Team 1', 'Wing B Team 2', 'Wing B Team 3', 'Wing B Team 4', 'Wing B Team 5', 'Wing B Team 6', 'Wing B Team 7', 'Wing B Team 8', 'Incorporated Trustees', 'Business Names']
   },
+  moreTimeRequest: {
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected']
+    },
+    reason: String,
+    remarks: String,
+    dateRequested: Date,
+    treatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    dateTreated: Date
+  },
   requestStatus: {
     currentStep: {
       type: Number,

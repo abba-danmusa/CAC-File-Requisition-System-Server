@@ -155,6 +155,35 @@ exports.getRequests = async (req, res) => {
               }
             }
           }
+        },
+        additionalTime: {
+          status: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: 'Additional Time Request Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$moreTimeRequest.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: '$moreTimeRequest.dateRequested',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'accepted'] },
+                  then: '$moreTimeRequest.dateTreated',
+                  else: '$moreTimeRequest.dateTreated'
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -371,6 +400,35 @@ exports.getLatestRequestStatus = async (req, res) => {
               }
             }
           }
+        },
+        additionalTime: {
+          status: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: 'Additional Time Request Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$moreTimeRequest.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: '$moreTimeRequest.dateRequested',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'accepted'] },
+                  then: '$moreTimeRequest.dateTreated',
+                  else: '$moreTimeRequest.dateTreated'
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -542,6 +600,31 @@ exports.approveRequest = async (req, res) => {
     { runValidators: true, new: true }
   ).populate('from').exec()
   const message = req.body.status === 'accepted' ? 'Approved' : 'Disapproved'
+  res.status(200).json({
+    status: 'success',
+    message: `Request ${message} Successfully`,
+    request
+  })
+}
+
+exports.approveAdditionalTimeRequest = async (req, res) => {
+  const { id: _id, remarks, status } = req.body
+  const elapseTime = await returnElapseTime()
+  const request = await Request.findOneAndUpdate(
+    { _id },
+    {
+      moreTimeRequest: {
+        status,
+        remarks,
+        dateTreated: Date.now(),
+        treatedBy: req.user._id
+      },
+      'requestStatus.fileReturn.status': 'pending',
+      'requestStatus.fileReturn.timeElapse': {time: elapseTime, elapsed: false}
+    },
+    {runValidators: true, new: true}
+  ).exec()
+  const message = status === 'accepted' ? 'Approved' : 'Rejected'
   res.status(200).json({
     status: 'success',
     message: `Request ${message} Successfully`,
@@ -2456,6 +2539,24 @@ exports.returnedFiles = async (req, res) => {
   })
 }
 
+exports.requestMoreTime = async (req, res) => {
+  const { id: _id, reason } = req.body
+  const request = await Request.findOneAndUpdate(
+    { _id },
+    {
+      'moreTimeRequest.reason': reason,
+      'moreTimeRequest.status': 'pending',
+      'moreTimeRequest.dateRequested': Date.now()
+    },
+    { runValidators: true, new: true }
+  ).populate('from').exec()
+  res.status(200).json({
+    status: 'success',
+    message: 'Successful And Awaiting Approval From The RMD',
+    request
+  })
+}
+
 // Searches
 exports.requestAccountSearch = async (req, res) => {
   const searchQuery = new RegExp(req.query.query) 
@@ -2480,6 +2581,161 @@ exports.requestAccountSearch = async (req, res) => {
         ]
       }
     },
+    {
+      $addFields: {
+        step: '$requestStatus.currentStep',
+        authorization: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: 'Awaiting Authorization',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.authorization.status', 'rejected'] },
+                  then: 'Request Declined',
+                  else: 'Request Authorized'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.authorization.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.authorization.status', 'pending'] },
+              then: '$requestStatus.authorization.dateReceived',
+              else: '$requestStatus.authorization.dateTreated'
+            }
+          }
+        },
+        approval: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: 'Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.approval.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.approval.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.approval.status', 'pending'] },
+              then: '$requestStatus.approval.dateReceived',
+              else: '$requestStatus.approval.dateTreated'
+            }
+          }
+        },
+        fileRelease: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: 'Awaiting File Release',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileRelease.status', 'rejected'] },
+                  then: 'Release Declined',
+                  else: 'File Released'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileRelease.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileRelease.status', 'pending'] },
+              then: '$requestStatus.fileRelease.dateReceived',
+              else: '$requestStatus.fileRelease.dateTreated'
+            }
+          }
+        },
+        fileReceive: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: 'Awaiting File',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReceive.status', 'rejected'] },
+                  then: 'File Not Received',
+                  else: 'File Received'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReceive.status', 'pending'] },
+              then: '$requestStatus.fileReceive.dateReceived',
+              else: '$requestStatus.fileReceive.dateTreated'
+            }
+          }
+        },
+        fileReturn: {
+          status: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReturn.status', 'pending'] },
+              then: 'Awaiting Return',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
+                  then: 'Awaiting Acknowledgement',
+                  else: 'File Returned'
+                }
+              }
+            }
+          },
+          remarks: '$requestStatus.fileReceive.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$requestStatus.fileReturn.status', 'pending'] },
+              then: '$requestStatus.fileReturn.timeElapse.time',
+              else: {
+                $cond: {
+                  if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
+                  then: '$requestStatus.fileReturn.dateReturned',
+                  else: '$requestStatus.fileReturn.dateAcknowledged'
+                }
+              }
+            }
+          }
+        },
+        additionalTime: {
+          status: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: 'Additional Time Request Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$moreTimeRequest.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: '$moreTimeRequest.dateRequested',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'accepted'] },
+                  then: '$moreTimeRequest.dateTreated',
+                  else: '$moreTimeRequest.dateTreated'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   ])
   if (!requests.length) {
     return res.status(404).json({
@@ -2626,6 +2882,35 @@ exports.receivedFilesSearch = async (req, res) => {
                   if: { $eq: ['$requestStatus.fileReturn.status', 'return'] },
                   then: '$requestStatus.fileReturn.dateReturned',
                   else: '$requestStatus.fileReturn.dateAcknowledged'
+                }
+              }
+            }
+          }
+        },
+        additionalTime: {
+          status: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: 'Additional Time Request Awaiting Approval',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'rejected'] },
+                  then: 'Request Disapproved',
+                  else: 'Request Approved'
+                }
+              }
+            }
+          },
+          remarks: '$moreTimeRequest.remarks',
+          date: {
+            $cond: {
+              if: { $eq: ['$moreTimeRequest.status', 'pending'] },
+              then: '$moreTimeRequest.dateRequested',
+              else: {
+                $cond: {
+                  if: { $eq: ['$moreTimeRequest.status', 'accepted'] },
+                  then: '$moreTimeRequest.dateTreated',
+                  else: '$moreTimeRequest.dateTreated'
                 }
               }
             }
